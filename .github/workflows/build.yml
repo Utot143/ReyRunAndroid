@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -24,11 +24,24 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extract ReyRun source ZIP
+        run: |
+          mkdir extracted
+          unzip -q "$(find . -maxdepth 2 -name 'ReyRunAndroid_source.zip' -print -quit)" -d extracted
+          test -f extracted/ReyRunAndroid/settings.gradle
+
       - name: Build APK
+        working-directory: extracted/ReyRunAndroid
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ReyRun-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: extracted/ReyRunAndroid/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
